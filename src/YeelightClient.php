@@ -5,6 +5,7 @@ namespace Yeelight;
 use Socket\Raw\Factory;
 use Yeelight\Bulb\Bulb;
 use Yeelight\Bulb\BulbFactory;
+use Yeelight\Exceptions\SocketException;
 
 class YeelightClient
 {
@@ -31,6 +32,7 @@ class YeelightClient
 
     /**
      * @return Bulb[]
+     * @throws SocketException
      */
     public function search()
     {

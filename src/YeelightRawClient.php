@@ -52,6 +52,8 @@ class YeelightRawClient
     }
 
     /**
+     * Local discovery for bulbs
+     *
      * @return Bulb[]
      * @throws SocketException
      */

@@ -87,6 +87,30 @@ class Bulb
     }
 
     /**
+     * This method is used to change the color temperature of a smart LED
+     *
+     * @param int    $ctValue  is the target color temperature
+     * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
+     * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
+     *
+     * @throws BulbCommandException
+     */
+    public function setCtAbx(int $ctValue, string $effect, int $duration)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'set_ct_abx',
+            'params' => [
+                $ctValue,
+                $effect,
+                $duration,
+            ],
+        ];
+        $this->send($data);
+        $this->read();
+    }
+
+    /**
      * @return string
      */
     public function getId(): string
@@ -99,7 +123,7 @@ class Bulb
      */
     private function send(array $data)
     {
-        $data = json_encode($data)."\r\n";
+        $data = json_encode($data) . "\r\n";
         $this->socket->send($data, self::NO_FLAG);
     }
 
@@ -122,31 +146,12 @@ class Bulb
     }
 
     /**
-     * @param int    $ctValue
-     * @param string $effect
-     * @param int    $duration
+     * This method is used to change the color of a smart LED
      *
-     * @throws BulbCommandException
-     */
-    public function setCtAbx(int $ctValue, string $effect, int $duration)
-    {
-        $data = [
-            'id' => hexdec($this->getId()),
-            'method' => 'set_ct_abx',
-            'params' => [
-                $ctValue,
-                $effect,
-                $duration,
-            ],
-        ];
-        $this->send($data);
-        $this->read();
-    }
-
-    /**
-     * @param int    $rgbValue
-     * @param string $effect
-     * @param int    $duration
+     * @param int    $rgbValue is the target color, whose type is integer. It should be expressed in decimal integer
+     *                         ranges from 0 to 16777215 (hex: 0xFFFFFF).
+     * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
+     * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
      * @throws BulbCommandException
      */
@@ -166,10 +171,12 @@ class Bulb
     }
 
     /**
-     * @param int    $hue
-     * @param int    $sat
-     * @param string $effect
-     * @param int    $duration
+     * This method is used to change the color of a smart LED
+     *
+     * @param int    $hue      is the target hue value, whose type is integer
+     * @param int    $sat      is the target saturation value whose type is integer
+     * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
+     * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
      * @throws BulbCommandException
      */
@@ -190,9 +197,12 @@ class Bulb
     }
 
     /**
-     * @param int    $brightness
-     * @param string $effect
-     * @param int    $duration
+     * This method is used to change the brightness of a smart LED
+     *
+     * @param int    $brightness is the target brightness. The type is integer and ranges from 1 to 100. The brightness
+     *                           is a percentage instead of a absolute value.
+     * @param string $effect     support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
+     * @param int    $duration   specifies the total time of the gradual changing. The unit is milliseconds
      *
      * @throws BulbCommandException
      */
@@ -212,9 +222,12 @@ class Bulb
     }
 
     /**
-     * @param string $power
-     * @param string $effect
-     * @param int    $duration
+     * This method is used to switch on or off the smart LED (software managed on/off)
+     *
+     * @param string $power    can only be "on" or "off". "on" means turn on the smart LED, "off" means turn off the
+     *                         smart LED
+     * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
+     * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
      * @throws BulbCommandException
      */
@@ -233,6 +246,9 @@ class Bulb
         $this->read();
     }
 
+    /**
+     * This method is used to toggle the smart LED
+     */
     public function toggle()
     {
         $data = [
@@ -244,6 +260,10 @@ class Bulb
         $this->read();
     }
 
+    /**
+     * This method is used to save current state of smart LED in persistent memory. So if user powers off and then
+     * powers on the smart LED again (hard power reset), the smart LED will show last saved state
+     */
     public function setDefault()
     {
         $data = [
@@ -256,28 +276,44 @@ class Bulb
     }
 
     /**
-     * @param int   $count
-     * @param int   $action
-     * @param array $flowExpression
+     * This method is used to start a color flow. Color flow is a series of smart LED visible state changing. It can be
+     * brightness changing, color changing or color temperature changing
+     *
+     * @param int   $count              is the total number of visible state changing before color flow stopped. 0
+     *                                  means infinite loop on the state changing
+     * @param int   $action             is the action taken after the flow is stopped
+     *                                  0 means smart LED recover to the state before the color flow started
+     *                                  1 means smart LED stay at the state when the flow is stopped
+     *                                  2 means turn off the smart LED after the flow is stopped
+     * @param array $flowExpression     is the expression of the state changing series in format
+     *                                  [
+     *                                  [duration, mode, value, brightness],
+     *                                  [duration, mode, value, brightness]
+     *                                  ]
      *
      * @throws BulbCommandException
      */
     public function startCf(int $count, int $action, array $flowExpression)
     {
-        $state = implode(",", array_map(function($item) {return implode(",", $item);}, $flowExpression));
+        $state = implode(",", array_map(function ($item) {
+            return implode(",", $item);
+        }, $flowExpression));
         $data = [
             'id' => hexdec($this->getId()),
             'method' => 'start_cf',
             'params' => [
                 $count,
                 $action,
-                $state
+                $state,
             ],
         ];
         $this->send($data);
         $this->read();
     }
 
+    /**
+     * This method is used to stop a running color flow
+     */
     public function stopCf()
     {
         $data = [
@@ -291,8 +327,19 @@ class Bulb
 
 
     /**
-     * @param string $action
-     * @param string $prop
+     * This method is used to change brightness, CT or color of a smart LED without knowing the current value, it's
+     * main used by controllers.
+     *
+     * @param string $action the direction of the adjustment The valid value can be:
+     *                       “increase": increase the specified property (Bulb::ADJUST_ACTION_INCREASE)
+     *                       “decrease": decrease the specified property (Bulb::ADJUST_ACTION_DECREASE)
+     *                       “circle": increase the specified property, after it reaches the max
+     *                       (Bulb::ADJUST_ACTION_CIRCLE)
+     * @param string $prop   the property to adjust. The valid value can be:
+     *                       “bright": adjust brightness (Bulb::ADJUST_PROP_BRIGHTNESS)
+     *                       “ct": adjust color temperature (Bulb::ADJUST_PROP_COLOR_TEMP)
+     *                       “color": adjust color. (Bulb::ADJUST_PROP_COLOR) (When “prop" is “color", the “action" can
+     *                       only be “circle", otherwise, it will be deemed as invalid request.)
      *
      * @throws BulbCommandException
      */
@@ -303,7 +350,7 @@ class Bulb
             'method' => 'set_adjust',
             'params' => [
                 $action,
-                $prop
+                $prop,
             ],
         ];
         $this->send($data);
