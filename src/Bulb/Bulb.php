@@ -24,6 +24,7 @@ class Bulb
     const ADJUST_PROP_COLOR_TEMP = 'ct';
     const ADJUST_PROP_COLOR = 'color';
 
+
     /**
      * @var Socket
      */
@@ -87,27 +88,25 @@ class Bulb
     }
 
     /**
-     * This method is used to change the color temperature of a smart LED
+     * This method is used to retrieve current property of smart LED
      *
-     * @param int    $ctValue  is the target color temperature
-     * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
-     * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
+     * @param array $properties The parameter is a list of property (consts from BulbProperties) names and the response
+     *                          contains a list of corresponding property values. If the requested property name is not
+     *                          recognized by smart LED, then a empty string value ("") will be returned
      *
-     * @throws BulbCommandException
+     * @return array
      */
-    public function setCtAbx(int $ctValue, string $effect, int $duration)
+    public function getProp(array $properties)
     {
         $data = [
             'id' => hexdec($this->getId()),
-            'method' => 'set_ct_abx',
-            'params' => [
-                $ctValue,
-                $effect,
-                $duration,
-            ],
+            'method' => 'get_prop',
+            'params' => $properties,
         ];
         $this->send($data);
-        $this->read();
+        $response = $this->read();
+
+        return array_combine($properties, $response['result']);
     }
 
     /**
@@ -143,6 +142,30 @@ class Bulb
         }
 
         return $response;
+    }
+
+    /**
+     * This method is used to change the color temperature of a smart LED
+     *
+     * @param int    $ctValue  is the target color temperature
+     * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
+     * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
+     *
+     * @throws BulbCommandException
+     */
+    public function setCtAbx(int $ctValue, string $effect, int $duration)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'set_ct_abx',
+            'params' => [
+                $ctValue,
+                $effect,
+                $duration,
+            ],
+        ];
+        $this->send($data);
+        $this->read();
     }
 
     /**
@@ -325,6 +348,87 @@ class Bulb
         $this->read();
     }
 
+    /**
+     * This method is used to set the smart LED directly to specified state. If the smart LED is off, then it will turn
+     * on the smart LED firstly and then apply the specified command
+     *
+     * @param array $params array that firs element is a class (color, hsv, ct, cf, auto_dealy_off) and next 3 are
+     *                      class specific eg.
+     *                      ['color', 65280, 70]
+     *                      ['hsv', 300, 70, 100]
+     *                      ['ct', 5400, 100]
+     *                      ['cf',0,0,"500,1,255,100,1000,1,16776960,70"]
+     *                      ['auto_delay_off', 50, 5]
+     */
+    public function setScene(array $params)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'set_scene',
+            'params' => $params,
+        ];
+        $this->send($data);
+        $this->read();
+    }
+
+    /**
+     * This method is used to start a timer job on the smart LED
+     *
+     * @param int $type  type of the cron job
+     * @param int $value length of the timer (in minutes)
+     */
+    public function cronAdd(int $type, int $value)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'cron_add',
+            'params' => [
+                $type,
+                $value,
+            ],
+        ];
+        $this->send($data);
+        $this->read();
+    }
+
+    /**
+     * This method is used to retrieve the setting of the current cron job of the specified type
+     *
+     * @param int $type type of the cron job
+     *
+     * @return array
+     */
+    public function cronGet(int $type)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'cron_get',
+            'params' => [
+                $type,
+            ],
+        ];
+        $this->send($data);
+
+        return $this->read();
+    }
+
+    /**
+     * This method is used to stop the specified cron job
+     *
+     * @param int $type type of the cron job
+     */
+    public function cronDel(int $type)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'cron_del',
+            'params' => [
+                $type,
+            ],
+        ];
+        $this->send($data);
+        $this->read();
+    }
 
     /**
      * This method is used to change brightness, CT or color of a smart LED without knowing the current value, it's
@@ -351,6 +455,54 @@ class Bulb
             'params' => [
                 $action,
                 $prop,
+            ],
+        ];
+        $this->send($data);
+        $this->read();
+    }
+
+    /**
+     * This method is used to start or stop music mode on a device
+     *
+     * @param int         $action the action of set_music command
+     * @param string|null $host   the IP address of the music server
+     * @param int|null    $port   the TCP port music application is listening on
+     */
+    public function setMusic(int $action, string $host = null, int $port = null)
+    {
+        $params = [
+            $action,
+        ];
+
+        if (!is_null($host)) {
+            $params[] = $host;
+        }
+
+        if (!is_null($port)) {
+            $params[] = $port;
+        }
+
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'set_music',
+            'params' => $params,
+        ];
+        $this->send($data);
+        $this->read();
+    }
+
+    /**
+     * This method is used to name the device
+     *
+     * @param string $name name of the device
+     */
+    public function setName(string $name)
+    {
+        $data = [
+            'id' => hexdec($this->getId()),
+            'method' => 'set_name',
+            'params' => [
+                $name,
             ],
         ];
         $this->send($data);

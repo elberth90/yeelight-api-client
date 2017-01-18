@@ -4,6 +4,7 @@ namespace Tests\Bulb;
 
 use Socket\Raw\Socket;
 use Yeelight\Bulb\Bulb;
+use Yeelight\Bulb\BulbProperties;
 
 /**
  * @property Bulb                                     bulb
@@ -18,6 +19,27 @@ class BulbTest extends \PHPUnit_Framework_TestCase
     {
         $this->socket = $this->prophesize(Socket::class);
         $this->bulb = new Bulb($this->socket->reveal(), '192.168.1.2', 55443, '0x0');
+    }
+
+    public function test_getProp()
+    {
+        $properties = [BulbProperties::BRIGHT, BulbProperties::SATURATION, 'foo'];
+        $response = ['result' => [100, 100, '']];
+        $expected = [
+            BulbProperties::BRIGHT => 100,
+            BulbProperties::SATURATION => 100,
+            'foo' => ''
+        ];
+
+        $buffer = json_encode(
+                ['id' => hexdec($this->bulb->getId()), 'method' => 'get_prop', 'params' => $properties
+                ]
+            )."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(json_encode($response))->shouldBeCalled();
+
+        $result = $this->bulb->getProp($properties);
+        $this->assertEquals($expected, $result);
     }
 
     public function test_setCtAbx()
@@ -166,6 +188,57 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->bulb->stopCf();
     }
 
+    public function test_setScene()
+    {
+        $params = ['color', 65280, 70];
+        $buffer = json_encode(
+                ['id' => hexdec($this->bulb->getId()), 'method' => 'set_scene', 'params' => $params]
+            )."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+
+        $this->bulb->setScene($params);
+    }
+
+    public function test_cronAdd()
+    {
+        $type = 0;
+        $value = 15;
+        $buffer = json_encode(['id' => hexdec($this->bulb->getId()), 'method' => 'cron_add', 'params' => [
+            $type, $value
+            ]])."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+
+        $this->bulb->cronAdd($type, $value);
+    }
+
+    public function test_cronGet()
+    {
+        $type = 0;
+        $response = ['id' => 1, 'result' => ['type' => 0, 'delay' => 15, 'mix' => 0]];
+        $buffer = json_encode(['id' => hexdec($this->bulb->getId()), 'method' => 'cron_get', 'params' => [
+                $type
+            ]])."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(json_encode($response))->shouldBeCalled();
+
+        $result = $this->bulb->cronGet($type);
+        $this->assertEquals($response, $result);
+    }
+
+    public function test_cronDel()
+    {
+        $type = 0;
+        $buffer = json_encode(['id' => hexdec($this->bulb->getId()), 'method' => 'cron_del', 'params' => [
+                $type
+            ]])."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+
+        $this->bulb->cronDel($type);
+    }
+
     public function test_setAdjust()
     {
         $action = Bulb::ADJUST_ACTION_INCREASE;
@@ -179,5 +252,35 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setAdjust($action, $prop);
+    }
+
+    public function test_setMusic()
+    {
+        $action = 0;
+        $host = '192.168.0.2';
+        $port = 54321;
+        $buffer = json_encode(
+                ['id' => hexdec($this->bulb->getId()), 'method' => 'set_music', 'params' => [
+                    $action, $host, $port
+                ]]
+            )."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+
+        $this->bulb->setMusic($action, $host, $port);
+    }
+
+    public function test_setName()
+    {
+        $name = 'foo';
+        $buffer = json_encode(
+                ['id' => hexdec($this->bulb->getId()), 'method' => 'set_name', 'params' => [
+                    $name
+                ]]
+            )."\r\n";
+        $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+
+        $this->bulb->setName($name);
     }
 }
