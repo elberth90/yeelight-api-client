@@ -12,7 +12,8 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "clue/socket-raw": "~1.2"
+        "clue/socket-raw": "~1.2",
+        "react/promise": "^2.5"
     },
     "require-dev": {
         "phpunit/phpunit": "^5.6"
