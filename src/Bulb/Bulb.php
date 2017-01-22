@@ -3,7 +3,6 @@
 namespace Yeelight\Bulb;
 
 use Socket\Raw\Socket;
-use Yeelight\Bulb\Exceptions\BulbCommandException;
 
 class Bulb
 {
@@ -88,13 +87,21 @@ class Bulb
     }
 
     /**
+     * @return string
+     */
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    /**
      * This method is used to retrieve current property of smart LED
      *
      * @param array $properties The parameter is a list of property (consts from BulbProperties) names and the response
      *                          contains a list of corresponding property values. If the requested property name is not
      *                          recognized by smart LED, then a empty string value ("") will be returned
      *
-     * @return array
+     * @return Response
      */
     public function getProp(array $properties)
     {
@@ -104,17 +111,8 @@ class Bulb
             'params' => $properties,
         ];
         $this->send($data);
-        $response = $this->read();
 
-        return array_combine($properties, $response['result']);
-    }
-
-    /**
-     * @return string
-     */
-    public function getId(): string
-    {
-        return $this->id;
+        return $this->read();
     }
 
     /**
@@ -127,21 +125,13 @@ class Bulb
     }
 
     /**
-     * @return array
-     * @throws BulbCommandException
+     * @return Response
      */
-    private function read(): array
+    private function read(): Response
     {
         $response = json_decode($this->socket->read(self::PACKET_LENGTH), true);
-        if (isset($response['error'])) {
-            throw new BulbCommandException(
-                $response['error']['message'],
-                $response['error']['code'],
-                $response['id']
-            );
-        }
 
-        return $response;
+        return new Response($response);
     }
 
     /**
@@ -151,7 +141,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function setCtAbx(int $ctValue, string $effect, int $duration)
     {
@@ -165,7 +155,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -176,7 +167,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function setRgb(int $rgbValue, string $effect, int $duration)
     {
@@ -190,7 +181,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -201,7 +193,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function setHsv(int $hue, int $sat, string $effect, int $duration)
     {
@@ -216,7 +208,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -227,7 +220,7 @@ class Bulb
      * @param string $effect     support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration   specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function setBright(int $brightness, string $effect, int $duration)
     {
@@ -241,7 +234,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -252,7 +246,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function setPower(string $power, string $effect, int $duration)
     {
@@ -266,11 +260,14 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
      * This method is used to toggle the smart LED
+     *
+     * @return Response
      */
     public function toggle()
     {
@@ -280,12 +277,15 @@ class Bulb
             'params' => [],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
      * This method is used to save current state of smart LED in persistent memory. So if user powers off and then
      * powers on the smart LED again (hard power reset), the smart LED will show last saved state
+     *
+     * @return Response
      */
     public function setDefault()
     {
@@ -295,7 +295,8 @@ class Bulb
             'params' => [],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -314,7 +315,7 @@ class Bulb
      *                                  [duration, mode, value, brightness]
      *                                  ]
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function startCf(int $count, int $action, array $flowExpression)
     {
@@ -331,11 +332,14 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
      * This method is used to stop a running color flow
+     *
+     * @return Response
      */
     public function stopCf()
     {
@@ -345,7 +349,8 @@ class Bulb
             'params' => [],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -359,6 +364,8 @@ class Bulb
      *                      ['ct', 5400, 100]
      *                      ['cf',0,0,"500,1,255,100,1000,1,16776960,70"]
      *                      ['auto_delay_off', 50, 5]
+     *
+     * @return Response
      */
     public function setScene(array $params)
     {
@@ -368,7 +375,8 @@ class Bulb
             'params' => $params,
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -376,6 +384,8 @@ class Bulb
      *
      * @param int $type  type of the cron job
      * @param int $value length of the timer (in minutes)
+     *
+     * @return Response
      */
     public function cronAdd(int $type, int $value)
     {
@@ -388,7 +398,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -396,7 +407,7 @@ class Bulb
      *
      * @param int $type type of the cron job
      *
-     * @return array
+     * @return Response
      */
     public function cronGet(int $type)
     {
@@ -416,6 +427,8 @@ class Bulb
      * This method is used to stop the specified cron job
      *
      * @param int $type type of the cron job
+     *
+     * @return Response
      */
     public function cronDel(int $type)
     {
@@ -427,7 +440,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -445,7 +459,7 @@ class Bulb
      *                       “color": adjust color. (Bulb::ADJUST_PROP_COLOR) (When “prop" is “color", the “action" can
      *                       only be “circle", otherwise, it will be deemed as invalid request.)
      *
-     * @throws BulbCommandException
+     * @return Response
      */
     public function setAdjust(string $action, string $prop)
     {
@@ -458,7 +472,8 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
@@ -467,6 +482,8 @@ class Bulb
      * @param int         $action the action of set_music command
      * @param string|null $host   the IP address of the music server
      * @param int|null    $port   the TCP port music application is listening on
+     *
+     * @return Response
      */
     public function setMusic(int $action, string $host = null, int $port = null)
     {
@@ -488,13 +505,16 @@ class Bulb
             'params' => $params,
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 
     /**
      * This method is used to name the device
      *
      * @param string $name name of the device
+     *
+     * @return Response
      */
     public function setName(string $name)
     {
@@ -506,6 +526,7 @@ class Bulb
             ],
         ];
         $this->send($data);
-        $this->read();
+
+        return $this->read();
     }
 }
