@@ -2,6 +2,7 @@
 
 namespace Yeelight\Bulb;
 
+use React\Promise\Promise;
 use Socket\Raw\Socket;
 
 class Bulb
@@ -101,7 +102,7 @@ class Bulb
      *                          contains a list of corresponding property values. If the requested property name is not
      *                          recognized by smart LED, then a empty string value ("") will be returned
      *
-     * @return Response
+     * @return Promise
      */
     public function getProp(array $properties)
     {
@@ -125,13 +126,22 @@ class Bulb
     }
 
     /**
-     * @return Response
+     * @return Promise
      */
-    private function read(): Response
+    private function read(): Promise
     {
-        $response = json_decode($this->socket->read(self::PACKET_LENGTH), true);
+        return new Promise(function (callable $resolve, callable $reject) {
+            $response = new Response(
+                json_decode($this->socket->read(self::PACKET_LENGTH), true)
+            );
 
-        return new Response($response);
+            if ($response->isSuccess()) {
+                $resolve($response);
+                return;
+            }
+
+            $reject($response);
+        });
     }
 
     /**
@@ -141,7 +151,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @return Response
+     * @return Promise
      */
     public function setCtAbx(int $ctValue, string $effect, int $duration)
     {
@@ -167,7 +177,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @return Response
+     * @return Promise
      */
     public function setRgb(int $rgbValue, string $effect, int $duration)
     {
@@ -193,7 +203,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @return Response
+     * @return Promise
      */
     public function setHsv(int $hue, int $sat, string $effect, int $duration)
     {
@@ -220,7 +230,7 @@ class Bulb
      * @param string $effect     support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration   specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @return Response
+     * @return Promise
      */
     public function setBright(int $brightness, string $effect, int $duration)
     {
@@ -246,7 +256,7 @@ class Bulb
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
      *
-     * @return Response
+     * @return Promise
      */
     public function setPower(string $power, string $effect, int $duration)
     {
@@ -267,7 +277,7 @@ class Bulb
     /**
      * This method is used to toggle the smart LED
      *
-     * @return Response
+     * @return Promise
      */
     public function toggle()
     {
@@ -285,7 +295,7 @@ class Bulb
      * This method is used to save current state of smart LED in persistent memory. So if user powers off and then
      * powers on the smart LED again (hard power reset), the smart LED will show last saved state
      *
-     * @return Response
+     * @return Promise
      */
     public function setDefault()
     {
@@ -315,7 +325,7 @@ class Bulb
      *                                  [duration, mode, value, brightness]
      *                                  ]
      *
-     * @return Response
+     * @return Promise
      */
     public function startCf(int $count, int $action, array $flowExpression)
     {
@@ -339,7 +349,7 @@ class Bulb
     /**
      * This method is used to stop a running color flow
      *
-     * @return Response
+     * @return Promise
      */
     public function stopCf()
     {
@@ -365,7 +375,7 @@ class Bulb
      *                      ['cf',0,0,"500,1,255,100,1000,1,16776960,70"]
      *                      ['auto_delay_off', 50, 5]
      *
-     * @return Response
+     * @return Promise
      */
     public function setScene(array $params)
     {
@@ -385,7 +395,7 @@ class Bulb
      * @param int $type  type of the cron job
      * @param int $value length of the timer (in minutes)
      *
-     * @return Response
+     * @return Promise
      */
     public function cronAdd(int $type, int $value)
     {
@@ -407,7 +417,7 @@ class Bulb
      *
      * @param int $type type of the cron job
      *
-     * @return Response
+     * @return Promise
      */
     public function cronGet(int $type)
     {
@@ -428,7 +438,7 @@ class Bulb
      *
      * @param int $type type of the cron job
      *
-     * @return Response
+     * @return Promise
      */
     public function cronDel(int $type)
     {
@@ -459,7 +469,7 @@ class Bulb
      *                       “color": adjust color. (Bulb::ADJUST_PROP_COLOR) (When “prop" is “color", the “action" can
      *                       only be “circle", otherwise, it will be deemed as invalid request.)
      *
-     * @return Response
+     * @return Promise
      */
     public function setAdjust(string $action, string $prop)
     {
@@ -483,7 +493,7 @@ class Bulb
      * @param string|null $host   the IP address of the music server
      * @param int|null    $port   the TCP port music application is listening on
      *
-     * @return Response
+     * @return Promise
      */
     public function setMusic(int $action, string $host = null, int $port = null)
     {
@@ -514,7 +524,7 @@ class Bulb
      *
      * @param string $name name of the device
      *
-     * @return Response
+     * @return Promise
      */
     public function setName(string $name)
     {

@@ -36,7 +36,11 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(json_encode($response))->shouldBeCalled();
 
         $result = $this->bulb->getProp($properties);
-        $this->assertEquals($expected, $result);
+        $result->then(function (Response $result) use ($expected) {
+            $this->assertEquals($expected, $result);
+        }, function () {
+            $this->fail('This should not happen');
+        });
     }
 
     public function test_setCtAbx()
@@ -69,7 +73,11 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::ERROR_RESPONSE)->shouldBeCalled();
 
         $response = $this->bulb->setCtAbx($ctValue, $effect, $duration);
-        $this->assertFalse($response->isSuccess());
+        $response->then(function (Response $result) {
+            $this->assertFalse($result->isSuccess());
+        }, function () {
+            $this->fail('This should not happen');
+        });
     }
 
     public function test_setRgb()
@@ -219,7 +227,11 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(json_encode($response))->shouldBeCalled();
 
         $result = $this->bulb->cronGet($type);
-        $this->assertEquals(new Response($response), $result);
+        $result->then(function (Response $result) use ($response) {
+            $this->assertEquals(new Response($response), $result);
+        }, function () {
+            $this->fail('This should not happen');
+        });
     }
 
     public function test_cronDel()
