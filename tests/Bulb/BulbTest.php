@@ -5,6 +5,7 @@ namespace Tests\Bulb;
 use Socket\Raw\Socket;
 use Yeelight\Bulb\Bulb;
 use Yeelight\Bulb\BulbProperties;
+use Yeelight\Bulb\Response;
 
 /**
  * @property Bulb                                     bulb
@@ -12,7 +13,7 @@ use Yeelight\Bulb\BulbProperties;
  */
 class BulbTest extends \PHPUnit_Framework_TestCase
 {
-    const EMPTY_RESPONSE = '{}';
+    const SUCCESS_RESPONSE = '{"id": 0, "result":{}}';
     const ERROR_RESPONSE = '{"id": 0, "error":{"code":-5000,"message":"general error"}}';
 
     public function setUp()
@@ -24,12 +25,8 @@ class BulbTest extends \PHPUnit_Framework_TestCase
     public function test_getProp()
     {
         $properties = [BulbProperties::BRIGHT, BulbProperties::SATURATION, 'foo'];
-        $response = ['result' => [100, 100, '']];
-        $expected = [
-            BulbProperties::BRIGHT => 100,
-            BulbProperties::SATURATION => 100,
-            'foo' => ''
-        ];
+        $response = ['id' => 1, 'result' => [100, 100, '']];
+        $expected = new Response($response);
 
         $buffer = json_encode(
                 ['id' => hexdec($this->bulb->getId()), 'method' => 'get_prop', 'params' => $properties
@@ -53,14 +50,11 @@ class BulbTest extends \PHPUnit_Framework_TestCase
             ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setCtAbx($ctValue, $effect, $duration);
     }
 
-    /**
-     * @expectedException \Yeelight\Bulb\Exceptions\BulbCommandException
-     */
     public function test_setCtAbx_can_handle_error_from_server()
     {
         $ctValue = -100;
@@ -74,7 +68,8 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
         $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::ERROR_RESPONSE)->shouldBeCalled();
 
-        $this->bulb->setCtAbx($ctValue, $effect, $duration);
+        $response = $this->bulb->setCtAbx($ctValue, $effect, $duration);
+        $this->assertFalse($response->isSuccess());
     }
 
     public function test_setRgb()
@@ -88,7 +83,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setRgb($rgbValue, $effect, $duration);
     }
@@ -105,7 +100,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setHsv($hue, $sat, $effect, $duration);
     }
@@ -121,7 +116,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setBright($brightness, $effect, $duration);
     }
@@ -137,7 +132,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setPower($power, $effect, $duration);
     }
@@ -146,7 +141,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
     {
         $buffer = json_encode(['id' => hexdec($this->bulb->getId()), 'method' => 'toggle', 'params' => []])."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->toggle();
     }
@@ -155,7 +150,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
     {
         $buffer = json_encode(['id' => hexdec($this->bulb->getId()), 'method' => 'set_default', 'params' => []])."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setDefault();
     }
@@ -174,7 +169,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->startCf($count, $action, $flowExpression);
     }
@@ -183,7 +178,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
     {
         $buffer = json_encode(['id' => hexdec($this->bulb->getId()), 'method' => 'stop_cf', 'params' => []])."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->stopCf();
     }
@@ -195,7 +190,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ['id' => hexdec($this->bulb->getId()), 'method' => 'set_scene', 'params' => $params]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setScene($params);
     }
@@ -208,7 +203,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
             $type, $value
             ]])."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->cronAdd($type, $value);
     }
@@ -224,7 +219,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(json_encode($response))->shouldBeCalled();
 
         $result = $this->bulb->cronGet($type);
-        $this->assertEquals($response, $result);
+        $this->assertEquals(new Response($response), $result);
     }
 
     public function test_cronDel()
@@ -234,7 +229,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 $type
             ]])."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->cronDel($type);
     }
@@ -249,7 +244,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setAdjust($action, $prop);
     }
@@ -265,7 +260,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setMusic($action, $host, $port);
     }
@@ -279,7 +274,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
                 ]]
             )."\r\n";
         $this->socket->send($buffer, Bulb::NO_FLAG)->shouldBeCalled();
-        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::EMPTY_RESPONSE)->shouldBeCalled();
+        $this->socket->read(Bulb::PACKET_LENGTH)->willReturn(self::SUCCESS_RESPONSE)->shouldBeCalled();
 
         $this->bulb->setName($name);
     }
