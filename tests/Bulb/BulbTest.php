@@ -38,6 +38,7 @@ class BulbTest extends \PHPUnit_Framework_TestCase
         $result = $this->bulb->getProp($properties);
         $result->then(function (Response $result) use ($expected) {
             $this->assertEquals($expected, $result);
+            $this->assertTrue($result->isSuccess());
         }, function () {
             $this->fail('This should not happen');
         });
