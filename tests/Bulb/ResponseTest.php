@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Bulb;
+namespace tests\Bulb;
 
 use Yeelight\Bulb\Exceptions\BulbCommandException;
 use Yeelight\Bulb\Response;

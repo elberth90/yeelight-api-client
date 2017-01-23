@@ -24,7 +24,6 @@ class Bulb
     const ADJUST_PROP_COLOR_TEMP = 'ct';
     const ADJUST_PROP_COLOR = 'color';
 
-
     /**
      * @var Socket
      */
@@ -88,14 +87,6 @@ class Bulb
     }
 
     /**
-     * @return string
-     */
-    public function getId(): string
-    {
-        return $this->id;
-    }
-
-    /**
      * This method is used to retrieve current property of smart LED
      *
      * @param array $properties The parameter is a list of property (consts from BulbProperties) names and the response
@@ -114,6 +105,14 @@ class Bulb
         $this->send($data);
 
         return $this->read();
+    }
+
+    /**
+     * @return string
+     */
+    public function getId(): string
+    {
+        return $this->id;
     }
 
     /**
@@ -137,10 +136,10 @@ class Bulb
 
             if ($response->isSuccess()) {
                 $resolve($response);
+
                 return;
             }
-
-            $reject($response);
+            $reject($response->getException());
         });
     }
 
