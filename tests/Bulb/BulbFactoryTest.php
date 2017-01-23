@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Bulb;
+namespace tests\Bulb;
 
 use Socket\Raw\Factory;
 use Socket\Raw\Socket;

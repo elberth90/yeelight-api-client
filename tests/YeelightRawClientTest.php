@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace tests;
 
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;

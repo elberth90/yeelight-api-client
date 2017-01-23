@@ -32,6 +32,7 @@ class YeelightClient
 
     /**
      * @return Bulb[]
+     *
      * @throws SocketException
      */
     public function search()
