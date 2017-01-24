@@ -1,6 +1,7 @@
 yeelight-api-client
 =======================
 [![Build Status](https://travis-ci.org/elberth90/yeelight-api-client.svg?branch=master)](https://travis-ci.org/elberth90/yeelight-api-client)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/elberth90/yeelight-api-client/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/elberth90/yeelight-api-client/?branch=master)
 
 Yeelight-api-client is a PHP client that makes it easy to manage and handle Yeelight bulbs.
 
