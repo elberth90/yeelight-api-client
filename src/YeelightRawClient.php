@@ -9,7 +9,7 @@ use Yeelight\Exceptions\SocketException;
 
 class YeelightRawClient
 {
-    const DISCOVERY_RESPONSE = "M-SEARCH * HTTP/1.1\r\n
+    const DISCOVERY_REQUEST = "M-SEARCH * HTTP/1.1\r\n
         HOST: 239.255.255.250:1982\r\n
         MAN: \"ssdp:discover\"\r\n
         ST: wifi_bulb\r\n";
@@ -60,7 +60,7 @@ class YeelightRawClient
      */
     public function search(): array
     {
-        $this->socket->sendTo(self::DISCOVERY_RESPONSE, self::NO_FLAG, self::MULTICAST_ADDRESS);
+        $this->socket->sendTo(self::DISCOVERY_REQUEST, self::NO_FLAG, self::MULTICAST_ADDRESS);
         $this->socket->setBlocking(false);
         while ($this->socket->selectRead($this->readTimeout)) {
             $data = $this->formatResponse($this->socket->read(self::PACKET_LENGTH));

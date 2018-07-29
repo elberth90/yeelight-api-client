@@ -5,28 +5,28 @@ namespace Yeelight\Bulb\Exceptions;
 class BulbCommandException extends Exception
 {
     /**
-     * @var int
+     * @var array
      */
-    private $bulbId;
+    private $rawResponse = [];
 
     /**
      * BulbCommandException constructor.
      *
+     * @param array $rawResponse
      * @param string $message
-     * @param int    $code
-     * @param int    $bulbId
+     * @param int $code
      */
-    public function __construct(string $message, int $code, int $bulbId)
+    public function __construct(array $rawResponse, string $message, int $code)
     {
         parent::__construct($message, $code);
-        $this->bulbId = $bulbId;
+        $this->rawResponse = $rawResponse;
     }
 
     /**
-     * @return int
+     * @return array
      */
-    public function getBulbId(): int
+    public function getRawResponse(): array
     {
-        return $this->bulbId;
+        return $this->rawResponse;
     }
 }

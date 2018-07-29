@@ -39,7 +39,7 @@ Each action performed on bulb return [Promise](https://github.com/reactphp/promi
 ```php
 $promise->done(function (\Yeelight\Bulb\Response $response) {
     // do something with response
-}, function (\Yeelight\Bulb\Exceptions\BulbCommandException $exception) {
+}, function (\Yeelight\Bulb\Exceptions\Exception $exception) {
     // log exception or whatever...
 });
 ```
