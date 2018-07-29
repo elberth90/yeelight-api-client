@@ -52,7 +52,7 @@ class YeelightRawClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->socket
             ->sendTo(
-                YeelightRawClient::DISCOVERY_RESPONSE,
+                YeelightRawClient::DISCOVERY_REQUEST,
                 YeelightRawClient::NO_FLAG,
                 YeelightRawClient::MULTICAST_ADDRESS
             )->shouldBeCalled();

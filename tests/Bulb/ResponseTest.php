@@ -3,6 +3,7 @@
 namespace tests\Bulb;
 
 use Yeelight\Bulb\Exceptions\BulbCommandException;
+use Yeelight\Bulb\Exceptions\InvalidResponseException;
 use Yeelight\Bulb\Response;
 
 class ResponseTest extends \PHPUnit_Framework_TestCase
@@ -17,7 +18,6 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
         );
 
         $this->assertTrue($response->isSuccess());
-        $this->assertEquals(1, $response->getDeviceId());
         $this->assertEquals(['foo'], $response->getResult());
     }
 
@@ -34,8 +34,17 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
         );
 
         $this->assertFalse($response->isSuccess());
-        $this->assertEquals(1, $response->getDeviceId());
         $this->assertEmpty($response->getResult());
         $this->assertInstanceOf(BulbCommandException::class, $response->getException());
+    }
+
+    public function test_invalid_response_payload()
+    {
+        $response = new Response(
+            []
+        );
+
+        $this->assertFalse($response->isSuccess());
+        $this->assertInstanceOf(InvalidResponseException::class, $response->getException());
     }
 }

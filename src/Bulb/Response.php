@@ -2,22 +2,19 @@
 
 namespace Yeelight\Bulb;
 
+use Yeelight\Bulb\Exceptions\Exception;
 use Yeelight\Bulb\Exceptions\BulbCommandException;
+use Yeelight\Bulb\Exceptions\InvalidResponseException;
 
 class Response
 {
-    /**
-     * @var int
-     */
-    private $deviceId;
-
     /**
      * @var array
      */
     private $result = [];
 
     /**
-     * @var BulbCommandException|null
+     * @var Exception|null
      */
     private $exception = null;
 
@@ -28,24 +25,22 @@ class Response
      */
     public function __construct(array $response)
     {
-        $this->deviceId = $response['id'];
-        if (isset($response['error'])) {
-            $this->exception = new BulbCommandException(
-                $response['error']['message'],
-                $response['error']['code'],
-                $response['id']
-            );
-        } else {
-            $this->result = $response['result'];
+        if (empty($response)) {
+            $this->exception = new InvalidResponseException('empty response');
+            return;
         }
-    }
 
-    /**
-     * @return int
-     */
-    public function getDeviceId(): int
-    {
-        return $this->deviceId;
+        if (
+            isset($response['error'])) {
+            $this->exception = new BulbCommandException(
+                $response,
+                $response['error']['message'],
+                $response['error']['code']
+            );
+            return;
+        }
+
+        $this->result = $response['result'];        
     }
 
     /**
@@ -57,9 +52,9 @@ class Response
     }
 
     /**
-     * @return null|BulbCommandException
+     * @return Exception
      */
-    public function getException()
+    public function getException(): Exception
     {
         return $this->exception;
     }
