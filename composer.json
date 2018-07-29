@@ -12,6 +12,7 @@
     ],
     "require": {
         "php": ">=7.0.0",
+        "ext-json": "*",
         "clue/socket-raw": "~1.2",
         "react/promise": "^2.5"
     },
