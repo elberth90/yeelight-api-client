@@ -23,6 +23,10 @@ class Bulb
     const ADJUST_PROP_BRIGHTNESS = 'bright';
     const ADJUST_PROP_COLOR_TEMP = 'ct';
     const ADJUST_PROP_COLOR = 'color';
+    const POWER_MODE_CURRENT = 0;
+    const POWER_MODE_DEFAULT = 1;
+    const POWER_MODE_RGB = 2;
+    const POWER_MODE_MOON = 5;
 
     /**
      * @var Socket
@@ -254,10 +258,11 @@ class Bulb
      *                         smart LED
      * @param string $effect   support two values: "sudden" (Bulb::EFFECT_SUDDEN) and "smooth" (Bulb::EFFECT_SMOOTH)
      * @param int    $duration specifies the total time of the gradual changing. The unit is milliseconds
+     * @param int    $mode     specifies the power mode.
      *
      * @return Promise
      */
-    public function setPower(string $power, string $effect, int $duration)
+    public function setPower(string $power, string $effect, int $duration, int $mode = self::POWER_MODE_CURRENT)
     {
         $data = [
             'id' => hexdec($this->getId()),
@@ -266,6 +271,7 @@ class Bulb
                 $power,
                 $effect,
                 $duration,
+                $mode,
             ],
         ];
         $this->send($data);
