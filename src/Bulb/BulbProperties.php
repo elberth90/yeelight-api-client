@@ -16,4 +16,5 @@ class BulbProperties
     const FLOW_PARAMS= 'flow_params';
     const MUSIC_ON = 'music_on';
     const NAME = 'name';
+    const ACTIVE_MODE = 'active_mode';
 }
